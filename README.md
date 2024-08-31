@@ -6,6 +6,6 @@ I'm using it on Ubiquiti router, but i think it should work on any linux based p
 
 Used projects:
 
-[Xray](https://github.com/XTLS/Xray-core)
-[tun2socks](https://github.com/xjasonlyu/tun2socks)
+- [Xray](https://github.com/XTLS/Xray-core)
+- [tun2socks](https://github.com/xjasonlyu/tun2socks)
 
