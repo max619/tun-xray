@@ -5,3 +5,6 @@ tun-xray/geo*
 tun-xray/LICENSE
 tun-xray/tun2socks
 tun-xray/iplist.txt
+tun-xray/README.md
+
+*.zip
