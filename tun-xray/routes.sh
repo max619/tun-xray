@@ -7,7 +7,12 @@ TARGET=$2
 DEV=$3
 CURRENTDIR=$(realpath $(dirname $0))
 
-for item in `cat $CURRENTDIR/iplist.txt`
+for ITEM in `cat $CURRENTDIR/iplist.txt`
 do
-        ip route $CMD $item/32 via $TARGET dev $DEV
+  NET=$ITEM
+  if [[ $ITEM != *"/"* ]]; then
+    NET=$NET/32
+  fi
+  ip route $CMD $NET via $TARGET dev $DEV
+  #echo "ip route $CMD $NET via $TARGET dev $DEV"
 done
