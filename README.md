@@ -36,12 +36,20 @@ scp -r tun-xray user@192.168.0.1:~/
 
 Connect to the device and move the `tun-xray` to `/opt/tun-xray`.
 
-Create symlinks for services
+Create symlinks for systemd services
 
 ```sh
 ln -s /opt/tun-xray/xray.service /etc/systemd/system/xray.service
 ln -s /opt/tun-xray/tun2socks.service /etc/systemd/system/tun2socks.service
 ```
+
+Or for init.d
+
+```sh
+ln -s /opt/tun-xray/xray.init /etc/init.d/xray
+ln -s /opt/tun-xray/tun2socks.init /etc/init.d/tun2socks
+```
+
 
 Create users
 
@@ -55,6 +63,13 @@ Start services
 ```sh
 systemctl start xray
 systemctl start tun2socks
+```
+
+Or
+
+```sh
+/etc/init.d/xray start
+/etc/init.d/tun2socks start
 ```
 
 ## Used projects
