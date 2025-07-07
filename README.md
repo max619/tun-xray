@@ -2,7 +2,7 @@
 
 Very simple set of scripts to use xray socks5 proxy as tun adapter and redirect all requests to specific ip list via socks5 proxy on router level.
 
-I'm using it on Ubiquiti router, but i think it should work on any linux based platform with systemd.
+I'm using it on Ubiquiti and OpenWRT routers, but i think it should work on any linux based platform with systemd/procd.
 
 ## Installation
 
@@ -43,7 +43,7 @@ ln -s /opt/tun-xray/xray.service /etc/systemd/system/xray.service
 ln -s /opt/tun-xray/tun2socks.service /etc/systemd/system/tun2socks.service
 ```
 
-Or for init.d
+Or for proc.d on OpenWRT
 
 ```sh
 ln -s /opt/tun-xray/xray.init /etc/init.d/xray
