@@ -94,7 +94,12 @@ setup_drop_routes_ipset()
     $IPTABLES -t mangle $IPTABLES_CMD PREROUTING -i $SRC_DEV -m set --match-set $IPSET_NAME dst -p udp --dport 443  -j MARK --set-mark $PROXY_IN_MARK/$PROXY_IN_MARK
     
     # Allow forwarding to an from tun
-    $IPTABLES $IPTABLES_CMD FORWARD -o $DEV -j ACCEPT
+    local FORWARD_CMD=$IPTABLES_CMD
+    if [ "$FORWARD_CMD" == "-A" ]; then
+        FORWARD_CMD=-I
+    fi
+
+    $IPTABLES $FORWARD_CMD FORWARD -i $SRC_DEV -o $DEV -j ACCEPT
 
     $IP route $IP_CMD default via $TUNIP dev $DEV table $PROXY_IN_TABLE
     $IP rule $IP_CMD fwmark $PROXY_IN_MARK table $PROXY_IN_TABLE priority 1000
