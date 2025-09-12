@@ -17,6 +17,8 @@ ex:
 ./install.sh mips32 mips-hardfloat
 ```
 
+### Client
+
 Create file 'tun-xray/iplist.txt' and add list of ips to pass through xray
 
 You can specify both subnets and specific ips:
@@ -26,15 +28,13 @@ You can specify both subnets and specific ips:
 220.181.174.32
 ```
 
-Put Xray config into `tun-xray/xray_config.json`
+Put Xray config into `tun-xray/xray_config.client.json`
 
 Then copy the `tun-xray` directory to the router or device on which you want to run the proxy
 
 ```sh
-scp -r tun-xray user@192.168.0.1:~/
+scp -r tun-xray user@192.168.0.1:/opt/tun-xray
 ```
-
-Connect to the device and move the `tun-xray` to `/opt/tun-xray`.
 
 Create symlinks for systemd services
 
@@ -49,7 +49,6 @@ Or for proc.d on OpenWRT
 ln -s /opt/tun-xray/xray.init /etc/init.d/xray
 ln -s /opt/tun-xray/tun2socks.init /etc/init.d/tun2socks
 ```
-
 
 Create users
 
@@ -71,6 +70,30 @@ Or
 /etc/init.d/xray start
 /etc/init.d/tun2socks start
 ```
+
+### Server
+
+Put Xray config into `tun-xray/xray_config.server.json`
+
+Then copy the `tun-xray` directory to the router or device on which you want to run the server
+
+```sh
+scp -r tun-xray user@192.168.0.1:/opt/tun-xray
+```
+
+Create symlinks for systemd services
+
+```sh
+ln -s /opt/tun-xray/xray-server.service /etc/systemd/system/xray-server.service
+```
+
+Create user and update acess rights
+
+```sh
+useradd xray
+chown -R xray:xray /opt/tun-xray
+```
+
 
 ## Used projects
 
