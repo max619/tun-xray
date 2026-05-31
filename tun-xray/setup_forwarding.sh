@@ -29,7 +29,7 @@ setup_forwarding()
 
 if [ "$ACTION" = "up" ]; then
     TARGET_HOST=$(cat $XRAY_CONFIG_FILE | sed -n -E 's/^[[:space:]]*"dest"[[:space:]]*:[[:space:]]*"(.+):.*/\1/p')
-    IP_ADDRESS=$(nslookup $TARGET_HOST | grep Address | tail -n 1 | awk '{print $2}')
+    IP_ADDRESS=$(nslookup -q=A $TARGET_HOST | grep Address | tail -n 1 | awk '{print $2}')
     echo "$IP_ADDRESS" > $FORWARD_FILE
     echo "Forwarding $TARGET_HOST@$IP_ADDRESS"
 else

@@ -94,6 +94,25 @@ useradd xray
 chown -R xray:xray /opt/tun-xray
 ```
 
+### Firewall
+
+You might need to allow forwarding in firewall
+
+```sh
+uci set firewall.proxy=zone
+uci set firewall.proxy.name='proxy'
+uci set firewall.proxy.input='ACCEPT'
+uci set firewall.proxy.output='ACCEPT'
+uci set firewall.proxy.forward='ACCEPT'
+uci set firewall.proxy.masq='0'
+uci add_list firewall.proxy.device='tun0'
+uci add firewall forwarding
+uci set firewall.@forwarding[-1].src='lan'
+uci set firewall.@forwarding[-1].dest='proxy'
+uci commit firewall
+service firewall restart
+```
+
 
 ## Used projects
 

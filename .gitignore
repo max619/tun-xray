@@ -8,6 +8,7 @@ tun-xray/tun2socks
 tun-xray/iplist.txt
 tun-xray/README.md
 tun-xray/extra_routes.sh
+tun-xray/tun2socks.config
 
 *.zip
 .DS_Store
