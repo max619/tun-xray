@@ -44,18 +44,64 @@ detected):
 
 ### Client
 
-Add the list of ips to pass through xray to `/opt/tun-xray/iplist.txt`.
+First decide which traffic should go through the proxy. There are two ways, and
+they can be combined.
 
-You can specify both subnets and specific ips:
+#### Preferred: domains via dnsmasq
+
+List the domains to proxy in `/opt/tun-xray/hosts.txt`, one per line (a leading
+dot also matches subdomains):
+
+```
+.openai.com
+.chatgpt.com
+```
+
+Generate the dnsmasq config from that list:
+
+```sh
+./gen_dnsmasq_conf.sh
+```
+
+This produces `ipset.conf` (for dnsmasq with ipset) and `nfset.conf` (for
+dnsmasq with nftables). They make dnsmasq add the resolved IPs of those domains
+to the ipset / nft set that `setup_routing.sh` matches on, so every address a
+proxied domain resolves to is routed through the tunnel automatically — even
+when it changes (CDNs, etc.). The set names are read from `config` (defaults:
+`XRAY_IPSET` for ipset, `inet xray freedom` for nftables).
+
+Include the generated file in your dnsmasq configuration and reload it. On
+OpenWRT (which needs `dnsmasq-full` for ipset/nftset support):
+
+```sh
+# nftables backend
+ln -s /opt/tun-xray/nfset.conf /etc/dnsmasq.d/nfset.conf
+# or, for the ipset backend
+ln -s /opt/tun-xray/ipset.conf /etc/dnsmasq.d/ipset.conf
+
+/etc/init.d/dnsmasq restart
+```
+
+#### Alternative: static IP list
+
+If you prefer to route fixed addresses, add them to `/opt/tun-xray/iplist.txt`,
+one per line — both subnets and single IPs work:
 
 ```
 220.181.174.0/24
 220.181.174.32
 ```
 
-There are two ways to run the client. The **xray tun inbound** mode is the
-preferred one — xray creates and owns the tun device itself, so only a single
-service is needed. The older `tun2socks` mode is kept as an alternative.
+`setup_routing.sh` seeds the set/routes from this file at startup. It is simpler
+but only covers the exact addresses listed, so prefer the dnsmasq method for
+anything that resolves to changing IPs.
+
+---
+
+You also choose **how** the tun device is provided. The **xray tun inbound**
+mode is the preferred one — xray creates and owns the tun device itself, so only
+a single service is needed. The older `tun2socks` mode is kept as an
+alternative.
 
 #### Preferred: xray with a tun inbound
 
