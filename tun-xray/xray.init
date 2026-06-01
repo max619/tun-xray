@@ -5,14 +5,25 @@ USE_PROCD=1
 START=50
 
 BASE_DIR=/opt/tun-xray
-PROG=$BASE_DIR/xray
+PROG=$BASE_DIR/start_xray.sh
 NAME=xray
 
 PIDFILE=/var/run/$NAME.pid
 
 start_service() {
 	procd_open_instance
-	procd_set_param command $PROG run -config $BASE_DIR/xray_config.client.json
+	procd_set_param command $PROG $BASE_DIR/xray_config.client.json
 	procd_set_param pidfile $PIDFILE
+	# On stop, procd sends SIGTERM to the wrapper; its signal trap tears down
+	# routing (setup_routing.sh down) and stops xray. Allow time for that
+	# before procd escalates to SIGKILL.
+	procd_set_param term_signal SIGTERM
+	procd_set_param term_timeout 10
 	procd_close_instance
+}
+
+stop_service() {
+	# Nothing extra to do here: routing teardown is handled by the wrapper's
+	# signal trap when procd terminates it above.
+	return 0
 }
