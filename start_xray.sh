@@ -72,6 +72,8 @@ echo "Config uses tun device '$TUN_DEV'; routing will be configured once it is u
 # from the xray config so setup_routing.sh acts on the right device.
 [ -f "$CURRENTDIR/config" ] && source "$CURRENTDIR/config"
 
+CGF_TUNIP=$TUNIP
+CGF_TUNNET=$TUNNET
 DEV=$TUN_DEV
 TUN_OUT=$(tun_setting autoOutboundsInterface)
 [ -n "$TUN_OUT" ] && OUT_DEV=$TUN_OUT
@@ -94,6 +96,18 @@ cleanup()
         kill "$XRAY_PID" 2>/dev/null
     fi
 }
+
+setup_routing()
+{
+    echo "Detected IP $TUNIP on tun device '$DEV'"
+    if "$CURRENTDIR/setup_routing.sh" up; then
+        ROUTING_UP=1
+    else
+        echo "Routing setup failed; stopping xray"
+        exit 1
+    fi
+}
+
 trap cleanup INT TERM EXIT
 
 "$XRAY" run -config "$CONFIG" &
@@ -118,16 +132,17 @@ while [ $i -lt 15 ]; do
 done
 
 if [ -n "$TUNIP" ]; then
-    echo "Detected IP $TUNIP on tun device '$DEV'"
-    if "$CURRENTDIR/setup_routing.sh" up; then
-        ROUTING_UP=1
-    else
-        echo "Routing setup failed; stopping xray"
-        exit 1
-    fi
+    setup_routing
 else
-    echo "Device '$DEV' did not get an IPv4 address; stopping xray"
-    exit 1
+    echo "Device '$DEV' did not get an IPv4 address; Forcing $CGF_TUNNET"
+    if ip addr add $CGF_TUNNET dev $DEV; then
+        TUNIP=$CGF_TUNIP
+        TUNNET=$CGF_TUNNET
+        setup_routing
+    else
+        echo "Failed to bind $TUNNET to '$DEV'"
+        exit $?
+    fi
 fi
 
 wait "$XRAY_PID"

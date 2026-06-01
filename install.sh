@@ -65,7 +65,7 @@ run_curl()
 
 download_latest()
 {
-   local LATEST_VERSION=$(run_curl https://api.github.com/repos/$1/releases/latest | grep tag_name | cut -d : -f 2,3 | tr -d '\", ')
+   local LATEST_VERSION=$(run_curl "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name)
    local URL=https://github.com/$1/releases/download/$LATEST_VERSION/$2
    echo "Downloading $1@$LATEST_VERSION from $URL"
    run_curl -o $3 $URL
