@@ -9,6 +9,9 @@ iplist.txt
 README.md
 extra_routes.sh
 tun2socks.config
+hosts.txt*
+ipset.conf
+nfset.conf
 
 *.zip
 .DS_Store
