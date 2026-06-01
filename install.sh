@@ -71,10 +71,108 @@ download_latest()
    run_curl -o $3 $URL
 }
 
+link_service()
+{
+   # $1 = file in install dir, $2 = symlink destination
+   local SRC="$INSTALL_DIR/$1" DST="$2"
+   if [ ! -f "$SRC" ]; then
+      echo "Warning: $SRC not found; skipping $DST"
+      return
+   fi
+   ln -sf "$SRC" "$DST"
+   echo "Linked $DST -> $SRC"
+}
+
+INSTALL_DIR=$(cd "$CURRENTDIR" && pwd)
+
+# --- ask what to install ----------------------------------------------------
+
+echo
+echo "Which configuration do you want to install?"
+echo "  1) Client"
+echo "  2) Server"
+printf "Selection [1]: "
+read -r ROLE
+case "$ROLE" in
+   2|server|Server) ROLE=server ;;
+   *)               ROLE=client ;;
+esac
+
+# For the client, choose how the tun device is provided.
+MODE=""
+if [ "$ROLE" = "client" ]; then
+   echo
+   echo "How should the tun device be provided?"
+   echo "  1) xray tun inbound (preferred, single service)"
+   echo "  2) tun2socks"
+   printf "Selection [1]: "
+   read -r MODE
+   case "$MODE" in
+      2|tun2socks) MODE=tun2socks ;;
+      *)           MODE=tun ;;
+   esac
+fi
+
+# --- download binaries ------------------------------------------------------
+
 download_latest XTLS/Xray-core Xray-linux-$XRAY_ARCH.zip xray.zip
-download_latest xjasonlyu/tun2socks tun2socks-linux-$TUN2SOCKS_ARCH.zip tun2socks.zip
-
 unzip -o xray.zip -x README.md -d $CURRENTDIR
-unzip -o tun2socks.zip -x README.md -d $CURRENTDIR
 
-mv tun2socks-linux-$TUN2SOCKS_ARCH tun2socks
+# tun2socks is only needed for the client tun2socks mode.
+if [ "$MODE" = "tun2socks" ]; then
+   download_latest xjasonlyu/tun2socks tun2socks-linux-$TUN2SOCKS_ARCH.zip tun2socks.zip
+   unzip -o tun2socks.zip -x README.md -d $CURRENTDIR
+   mv tun2socks-linux-$TUN2SOCKS_ARCH tun2socks
+fi
+
+# --- install services -------------------------------------------------------
+
+# Detect the init system; fall back to asking if unsure.
+INIT=""
+if command -v systemctl >/dev/null 2>&1 && [ -d /etc/systemd/system ]; then
+   INIT=systemd
+elif [ -d /etc/init.d ] && [ -f /etc/rc.common ]; then
+   INIT=procd
+fi
+
+if [ -z "$INIT" ]; then
+   echo
+   echo "Could not detect the init system. Which one should be used?"
+   echo "  1) systemd"
+   echo "  2) procd (OpenWRT)"
+   printf "Selection [1]: "
+   read -r INIT
+   case "$INIT" in
+      2|procd) INIT=procd ;;
+      *)       INIT=systemd ;;
+   esac
+fi
+
+if [ "$INIT" = "systemd" ]; then
+   DEST=/etc/systemd/system
+   if [ "$ROLE" = "server" ]; then
+      link_service xray-server.service $DEST/xray-server.service
+   else
+      link_service xray.service $DEST/xray.service
+      if [ "$MODE" = "tun2socks" ]; then
+         link_service tun2socks.service $DEST/tun2socks.service
+      fi
+   fi
+else
+   DEST=/etc/init.d
+   if [ "$ROLE" = "server" ]; then
+      if [ -f "$INSTALL_DIR/xray-server.init" ]; then
+         link_service xray-server.init $DEST/xray-server
+      else
+         echo "No procd init script for the server is provided; install it manually."
+      fi
+   else
+      link_service xray.init $DEST/xray
+      if [ "$MODE" = "tun2socks" ]; then
+         link_service tun2socks.init $DEST/tun2socks
+      fi
+   fi
+fi
+
+echo
+echo "Done. Review the config files in $INSTALL_DIR before starting the services."

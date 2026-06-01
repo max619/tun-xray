@@ -6,20 +6,45 @@ I'm using it on Ubiquiti and OpenWRT routers, but i think it should work on any 
 
 ## Installation
 
-To download binaries run:
+Download a snapshot of this repository onto the device where the proxy will run
+and unpack it into `/opt/tun-xray` (the path the service files expect):
 
 ```sh
-./install.sh <xray arch> <tun2socks arch>
+curl -L https://github.com/max619/tun-xray/archive/refs/heads/main.tar.gz -o tun-xray.tar.gz
+tar xzf tun-xray.tar.gz
+mv tun-xray-main /opt/tun-xray
+cd /opt/tun-xray
 ```
 
-ex:
+Then run `install.sh`. It downloads the binaries and installs the services
+interactively, detecting the CPU architecture and the init system (systemd or
+procd) and creating the matching service symlinks:
+
+```sh
+./install.sh
+```
+
+It asks:
+
+1. Client or Server.
+2. For a client, how the tun device is provided — xray tun inbound (preferred)
+   or tun2socks.
+
+and then downloads xray (plus tun2socks only when that mode is chosen) and
+symlinks the appropriate service files. Creating users and starting the
+services is still manual (see below).
+
+The architecture is auto-detected; override it by passing the xray and
+tun2socks arch names explicitly (e.g. for MIPS, whose float ABI can't be
+detected):
+
 ```sh
 ./install.sh mips32 mips-hardfloat
 ```
 
 ### Client
 
-Create file 'tun-xray/iplist.txt' and add list of ips to pass through xray
+Add the list of ips to pass through xray to `/opt/tun-xray/iplist.txt`.
 
 You can specify both subnets and specific ips:
 
@@ -37,8 +62,8 @@ service is needed. The older `tun2socks` mode is kept as an alternative.
 In this mode xray brings up the tun device, and the `start_xray.sh` wrapper
 configures policy routing for it. No `tun2socks` process is involved.
 
-Put an Xray config with a `tun` inbound into `tun-xray/xray_config.client.json`,
-for example:
+Put an Xray config with a `tun` inbound into
+`/opt/tun-xray/xray_config.client.json`, for example:
 
 ```json
 {
@@ -65,44 +90,16 @@ How it works:
    xray (see `term_signal`/`term_timeout` in `xray.init`).
 
 Set at least `SRC_DEV` (your LAN interface) and, if needed, the marks/tables in
-`tun-xray/tun2socks.config`. `DEV`, `OUT_DEV` and `TUNIP` are derived
+`/opt/tun-xray/tun2socks.config`. `DEV`, `OUT_DEV` and `TUNIP` are derived
 automatically from the running tun device and do not need to be set here.
 
-Copy the `tun-xray` directory to the router or device on which you want to run
-the proxy
+Run the installer and choose **Client** → **xray tun inbound** (this links only
+the `xray` service), then create the user and start it:
 
 ```sh
-scp -r tun-xray user@192.168.0.1:/opt/tun-xray
-```
-
-Create a symlink for the systemd service
-
-```sh
-ln -s /opt/tun-xray/xray.service /etc/systemd/system/xray.service
-```
-
-Or for proc.d on OpenWRT
-
-```sh
-ln -s /opt/tun-xray/xray.init /etc/init.d/xray
-```
-
-Create the user
-
-```sh
+./install.sh
 useradd xray
-```
-
-Start the service
-
-```sh
-systemctl start xray
-```
-
-Or
-
-```sh
-/etc/init.d/xray start
+systemctl start xray   # or: /etc/init.d/xray start
 ```
 
 #### Alternative: tun2socks
@@ -112,64 +109,32 @@ and a separate `tun2socks` process creates the tun device and forwards traffic
 into that socks proxy. `start_tun2socks.sh` creates the device and delegates the
 routing to `setup_routing.sh`.
 
-Put an Xray config with a socks inbound into `tun-xray/xray_config.client.json`,
-then copy the directory as above and create symlinks for **both** services
+Put an Xray config with a socks inbound into
+`/opt/tun-xray/xray_config.client.json`, then run the installer and choose
+**Client** → **tun2socks** (this links both the `xray` and `tun2socks`
+services). Create the users and start both services:
 
 ```sh
-ln -s /opt/tun-xray/xray.service /etc/systemd/system/xray.service
-ln -s /opt/tun-xray/tun2socks.service /etc/systemd/system/tun2socks.service
-```
-
-Or for proc.d on OpenWRT
-
-```sh
-ln -s /opt/tun-xray/xray.init /etc/init.d/xray
-ln -s /opt/tun-xray/tun2socks.init /etc/init.d/tun2socks
-```
-
-Create users
-
-```sh
+./install.sh
 useradd xray
 useradd tun2socks
-```
-
-Start services
-
-```sh
-systemctl start xray
-systemctl start tun2socks
-```
-
-Or
-
-```sh
-/etc/init.d/xray start
-/etc/init.d/tun2socks start
+systemctl start xray && systemctl start tun2socks
+# or: /etc/init.d/xray start && /etc/init.d/tun2socks start
 ```
 
 ### Server
 
-Put Xray config into `tun-xray/xray_config.server.json`
-
-Then copy the `tun-xray` directory to the router or device on which you want to run the server
-
-```sh
-scp -r tun-xray user@192.168.0.1:/opt/tun-xray
-```
-
-Create symlinks for systemd services
+Put your Xray server config into `/opt/tun-xray/xray_config.server.json`, run the
+installer and choose **Server**, then create the user and start it:
 
 ```sh
-ln -s /opt/tun-xray/xray-server.service /etc/systemd/system/xray-server.service
-```
-
-Create user and update acess rights
-
-```sh
+./install.sh
 useradd xray
 chown -R xray:xray /opt/tun-xray
+systemctl start xray-server
 ```
+
+> Only a systemd unit is provided for the server. On OpenWRT/procd the server config is not yet supported
 
 ### Firewall
 
