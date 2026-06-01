@@ -1,14 +1,14 @@
-tun-xray/xray
-tun-xray/xray_softfloat
-tun-xray/xray_config.json
-tun-xray/xray_config.*.json
-tun-xray/geo*
-tun-xray/LICENSE
-tun-xray/tun2socks
-tun-xray/iplist.txt
-tun-xray/README.md
-tun-xray/extra_routes.sh
-tun-xray/tun2socks.config
+xray
+xray_softfloat
+xray_config.json
+xray_config.*.json
+geo*
+LICENSE
+tun2socks
+iplist.txt
+README.md
+extra_routes.sh
+tun2socks.config
 
 *.zip
 .DS_Store

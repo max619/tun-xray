@@ -2,6 +2,9 @@
 
 #set -e
 
+
+CURRENTDIR=$(dirname $0)
+
 XRAY_ARCH=$1
 TUN2SOCKS_ARCH=$XRAY_ARCH
 
@@ -36,7 +39,7 @@ download_latest()
 download_latest XTLS/Xray-core Xray-linux-$XRAY_ARCH.zip xray.zip
 download_latest xjasonlyu/tun2socks tun2socks-linux-$TUN2SOCKS_ARCH.zip tun2socks.zip
 
-unzip -o xray.zip -d tun-xray
-unzip -o tun2socks.zip -d tun-xray
+unzip -o xray.zip -x README.md -d $CURRENTDIR
+unzip -o tun2socks.zip -x README.md -d $CURRENTDIR
 
-mv tun-xray/tun2socks-linux-$TUN2SOCKS_ARCH tun-xray/tun2socks
+mv tun2socks-linux-$TUN2SOCKS_ARCH tun2socks
