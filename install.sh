@@ -5,12 +5,47 @@
 
 CURRENTDIR=$(dirname $0)
 
-XRAY_ARCH=$1
-TUN2SOCKS_ARCH=$XRAY_ARCH
+# Map the host architecture (uname -m) to the release-asset names used by xray
+# and tun2socks. The two projects use different naming conventions, so each is
+# resolved separately. MIPS float ABI can't be detected reliably here; a
+# softfloat default is used and can be overridden via the CLI args.
+detect_arch()
+{
+   local MACHINE=$(uname -m)
+   case "$MACHINE" in
+      x86_64|amd64)        XRAY_ARCH=64;        TUN2SOCKS_ARCH=amd64 ;;
+      i386|i486|i586|i686) XRAY_ARCH=32;        TUN2SOCKS_ARCH=386 ;;
+      aarch64|arm64)       XRAY_ARCH=arm64-v8a; TUN2SOCKS_ARCH=arm64 ;;
+      armv7l|armv7)        XRAY_ARCH=arm32-v7a; TUN2SOCKS_ARCH=armv7 ;;
+      armv6l|armv6)        XRAY_ARCH=arm32-v6;  TUN2SOCKS_ARCH=armv6 ;;
+      armv5l|armv5|armv5tel) XRAY_ARCH=arm32-v5; TUN2SOCKS_ARCH=armv5 ;;
+      mips)                XRAY_ARCH=mips32;    TUN2SOCKS_ARCH=mips-softfloat ;;
+      mipsel|mipsle)       XRAY_ARCH=mips32le;  TUN2SOCKS_ARCH=mipsle-softfloat ;;
+      mips64)              XRAY_ARCH=mips64;    TUN2SOCKS_ARCH=mips64 ;;
+      mips64el|mips64le)   XRAY_ARCH=mips64le;  TUN2SOCKS_ARCH=mips64le ;;
+      s390x)               XRAY_ARCH=s390x;     TUN2SOCKS_ARCH=s390x ;;
+      ppc64le)             XRAY_ARCH=ppc64le;   TUN2SOCKS_ARCH=ppc64le ;;
+      riscv64)             XRAY_ARCH=riscv64;   TUN2SOCKS_ARCH=riscv64 ;;
+      *)
+         echo "Could not detect architecture for '$MACHINE'."
+         echo "Pass it explicitly: $0 <xray arch> <tun2socks arch>"
+         exit 1 ;;
+   esac
+   echo "Detected architecture '$MACHINE' -> xray=$XRAY_ARCH tun2socks=$TUN2SOCKS_ARCH"
+}
 
-if [ "$2" != "" ]; then
-   TUN2SOCKS_ARCH=$2
-fi;
+XRAY_ARCH=$1
+TUN2SOCKS_ARCH=$2
+
+# No arch given on the CLI -> auto-detect both from the host.
+if [ -z "$XRAY_ARCH" ]; then
+   detect_arch
+fi
+
+# Only the xray arch given -> reuse it for tun2socks (legacy behavior).
+if [ -z "$TUN2SOCKS_ARCH" ]; then
+   TUN2SOCKS_ARCH=$XRAY_ARCH
+fi
 
 run_and_exit_on_fail()
 {
