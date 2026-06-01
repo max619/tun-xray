@@ -8,7 +8,7 @@ tun2socks
 iplist.txt
 README.md
 extra_routes.sh
-tun2socks.config
+config
 hosts.txt*
 ipset.conf
 nfset.conf

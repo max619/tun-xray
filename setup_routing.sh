@@ -6,7 +6,7 @@
 # The tun device itself is created/destroyed by the caller (start_tun2socks.sh);
 # this script assumes $DEV already exists.
 #
-# Settings are read from the environment (not from tun2socks.config) so this
+# Settings are read from the environment (not from config) so this
 # script is independent of the tun2socks daemon. The caller is responsible for
 # exporting the variables below; required ones are validated up front.
 #
@@ -50,7 +50,7 @@ if [ -z "$IP" ]; then
     exit 1
 fi
 
-# Backend selection. Set BACKEND in tun2socks.config to force one of
+# Backend selection. Set BACKEND in config to force one of
 # nft | ipset | ip ; otherwise auto-detect, preferring nft.
 if [ -z "$BACKEND" ]; then
     if [ -n "$NFT" ]; then

@@ -83,14 +83,14 @@ How it works:
    (`name`, e.g. `xray0`) to come up and receive an IPv4 address.
 3. It reads that address as `TUNIP`, takes `DEV`/`OUT_DEV` from the xray config
    (`name` / `autoOutboundsInterface`), pulls the remaining routing parameters
-   (`SRC_DEV`, marks, tables, …) from `tun2socks.config`, and runs
+   (`SRC_DEV`, marks, tables, …) from `config`, and runs
    `setup_routing.sh up` to install the nftables (or iptables+ipset) rules and
    policy routing that steer the `iplist.txt` destinations into the tunnel.
 4. On stop, the wrapper's signal trap runs `setup_routing.sh down` and stops
    xray (see `term_signal`/`term_timeout` in `xray.init`).
 
 Set at least `SRC_DEV` (your LAN interface) and, if needed, the marks/tables in
-`/opt/tun-xray/tun2socks.config`. `DEV`, `OUT_DEV` and `TUNIP` are derived
+`/opt/tun-xray/config`. `DEV`, `OUT_DEV` and `TUNIP` are derived
 automatically from the running tun device and do not need to be set here.
 
 Run the installer and choose **Client** → **xray tun inbound** (this links only
@@ -140,7 +140,7 @@ systemctl start xray-server
 
 You might need to allow forwarding in firewall. Replace `tun0` below with your
 tun device name — `xray0` (the `name` from the xray config) in the preferred
-mode, or `tun0` (the `DEV` from `tun2socks.config`) in the tun2socks mode.
+mode, or `tun0` (the `DEV` from `config`) in the tun2socks mode.
 
 ```sh
 uci set firewall.proxy=zone

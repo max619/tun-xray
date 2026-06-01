@@ -9,7 +9,7 @@
 # Defaults to xray_config.client.json when no config is given.
 #
 # Routing parameters (SRC_DEV, marks, tables, ...) are read from
-# tun2socks.config; DEV and OUT_DEV are taken from the xray config, and TUNIP is
+# config; DEV and OUT_DEV are taken from the xray config, and TUNIP is
 # read off the tun device once xray has brought it up.
 
 CURRENTDIR=$(dirname $0)
@@ -68,9 +68,9 @@ fi
 
 echo "Config uses tun device '$TUN_DEV'; routing will be configured once it is up"
 
-# Routing settings come from tun2socks.config; override DEV/OUT_DEV/XRAY_CONFIG
+# Routing settings come from config; override DEV/OUT_DEV/XRAY_CONFIG
 # from the xray config so setup_routing.sh acts on the right device.
-[ -f "$CURRENTDIR/tun2socks.config" ] && source "$CURRENTDIR/tun2socks.config"
+[ -f "$CURRENTDIR/config" ] && source "$CURRENTDIR/config"
 
 DEV=$TUN_DEV
 TUN_OUT=$(tun_setting autoOutboundsInterface)

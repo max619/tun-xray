@@ -5,7 +5,7 @@
 CURRENTDIR=$(dirname $0)
 ACTION=$1
 
-source $CURRENTDIR/tun2socks.config
+source $CURRENTDIR/config
 
 # Export the settings setup_routing.sh expects from the environment.
 export DEV TUNIP SRC_DEV OUT_DEV OUT_VIA XRAY_CONFIG \
